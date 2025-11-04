@@ -33,4 +33,6 @@ class ArtisanController extends Controller
 
         return view('artisans.index', compact('artisans'));
     }
+
+    
 }
