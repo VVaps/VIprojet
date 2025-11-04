@@ -46,4 +46,9 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+     public function artisan()
+    {
+        return $this->hasOne(Artisan::class, 'user_id');
+    }
 }

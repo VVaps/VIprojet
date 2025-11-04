@@ -87,6 +87,52 @@ class ProductController extends Controller
             // foreach ($request->input("category_id") as $key => $value) {
             $price = Price::create([
                 'price' => $request->input('price'),
+                'qty_available' => $request->input('qty_available'),
+                'id_artisan' => $request->user()->id,
+                'id_product' => $productId->id,
+            ]);    
+            DB::commit();
+
+            //récupération de la liste de tous les produits de l'utilisateur 
+            $products =  Product::with(['price' => function ($query) use ($artisanId) {
+            $query->where('id_artisan', $artisanId);
+            }])->get();
+
+            return redirect()->route('products.index', compact('products'))
+                ->with('success', 'Produit créé avec succès.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Erreur lors de la création: ' . $e->getMessage());
+        }
+    }
+    
+
+    public function updProduct(Request $request)
+    {
+        // récupère le produit saisi et le charge dans la base
+        $validated = $request->validate([
+            'nom' => 'required|string|max:255',
+            'description' => 'required|string',
+            'price' => 'required|numeric|min:0',
+            'image' => 'image',
+        ]);
+
+        $path = $request->file("image")->storePublicly("productsImg", "public");
+
+        try {
+            DB::beginTransaction();
+
+            $product -> update([
+                'nom' => $request->'nom',
+                'description' => $request->'description',
+                'image' => $path,
+            ]);
+
+            // foreach ($request->input("category_id") as $key => $value) {
+            $price = Price::create([
+                'price' => $request->input('price'),
                 'qty_available' => $request->qty_available,
                 'id_artisan' => $request->user()->id,
                 'id_product' => $productId->id,
@@ -103,7 +149,6 @@ class ProductController extends Controller
         }
     }
     
-    +
     public function updValid(String $id,UpdateProductRequest $request): RedirectResponse
     {
         $validate = $request->validated();
