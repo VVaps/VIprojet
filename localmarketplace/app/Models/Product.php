@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
+
 class Product extends Model
 {
      use HasFactory ;  //, SoftDeletes;
@@ -22,11 +23,22 @@ class Product extends Model
         'deleted_at',
     ];
 
-    public function prices()
+    public function price()
     {
-        return $this->hasMany(Price::class, 'id_product');
+        return $this->hasMany(Prices::class, 'id_product');
     }
 
+    public function latestPrice()
+    {
+        return $this->hasOne(Price::class, 'id_product')
+                    ->whereNull('deleted_at')
+                    ->latest('created_at');
+    }
+
+    public function creator()
+    {
+        return $this->belongsTo(Artisan::class, 'id_artisan_creator');
+    }
 }
 
 

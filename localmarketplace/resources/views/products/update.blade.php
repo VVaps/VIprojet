@@ -18,7 +18,7 @@
                                         <span class="text-2xl font-bold text-green-600">{{ number_format($product->price, 2) }} €</span>
                                         <span class="text-2xl font-bold text-green-600">{{ number_format($price->qty_available, 2)?? 'Stock non précisé' }} €</span>
                                         <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition duration-300">
-                                            Ajouter au panier
+                                            Modifier
                                         </button>
                                     </div>
                                 </div>

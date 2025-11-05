@@ -8,6 +8,14 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
+Route::get('/products', [ProductController::class, 'show'])->name('products.index');
+
+    // Routes protégées (nécessitent authentification + statut artisan)
+Route::middleware(['auth:sanctum', 'artisan'])->group(function () {
+    Route::post('/products', [ProductController::class, 'addProduct'])->name('products.create');
+    Route::put('/products', [ProductController::class, 'updProduct'])->name('products.update');
+    Route::delete('/products', [ProductController::class, 'delProduct'])->name('products.update');
+});
 Route::get('/artisans', [ArtisanController::class, 'index'])->name('artisans.index');
 
 Route::get('/dashboard', function () {
@@ -19,5 +27,8 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
+
+
+
 
 require __DIR__.'/auth.php';
