@@ -8,22 +8,26 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
-Route::get('/products/{id}', [ProductController::class, 'show'])->name('products.index');
+Route::get('/products/{id}', [ProductController::class, 'show'])->name('products.show');
 Route::get('/artisans', [ArtisanController::class, 'index'])->name('artisans.index');
-Route::get('/artisans/{id}', [ArtisanController::class, 'show'])->name('artisans.index');
+Route::get('/artisans/{id}', [ArtisanController::class, 'show'])->name('artisans.show');
 
     // Routes protégées (nécessitent authentification + statut artisan)
 Route::middleware(['auth'])->group(function () {
-    Route::post('/products', [ProductController::class, 'addProduct'])->name('products.create');
-    Route::put('/products', [ProductController::class, 'updProduct'])->name('products.update');
-    Route::delete('/products', [ProductController::class, 'delProduct'])->name('products.update');
+    Route::get('/products/create', [ProductController::class, 'create'])->name('products.create');
+    Route::post('/products', [ProductController::class, 'addProduct'])->name('products.store');
+    Route::get('/products/{product}/edit', [ProductController::class, 'edit'])->name('products.edit');
+    Route::put('/products/{product}', [ProductController::class, 'updProduct'])->name('products.update');
+    Route::delete('/products/{id}', [ProductController::class, 'delProduct'])->name('products.delete');
 });
 
     // Routes protégées (nécessitent authentification + statut artisan)
 Route::middleware(['auth'])->group(function () {
-    Route::post('/artisans', [ArtisanController::class, 'addArtisant'])->name('artisans.index');
-    Route::put('/artisans', [ArtisanController::class, 'updArtisan'])->name('artisans.indexe');
-    Route::delete('/artisans', [ArtisanController::class, 'delArtisan'])->name('artisans.index');
+    Route::get('/artisans/create', [ArtisanController::class, 'create'])->name('artisans.create');
+    Route::post('/artisans', [ArtisanController::class, 'addArtisant'])->name('artisans.store');
+    Route::get('/artisans/{artisan}/edit', [ArtisanController::class, 'edit'])->name('artisans.edit');
+    Route::put('/artisans/{artisant}', [ArtisanController::class, 'updArtisan'])->name('artisans.update');
+    Route::delete('/artisans/{id}', [ArtisanController::class, 'delArtisan'])->name('artisans.delete');
 });
 
 

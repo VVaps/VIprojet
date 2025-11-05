@@ -4,11 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 
 class Product extends Model
 {
-     use HasFactory ;  //, SoftDeletes;
+     use HasFactory, SoftDeletes;
 
     protected $table = 'product';
 
@@ -23,9 +24,9 @@ class Product extends Model
         'deleted_at',
     ];
 
-    public function price()
+    public function prices()
     {
-        return $this->hasMany(Prices::class, 'id_product');
+        return $this->hasMany(Price::class, 'id_product');
     }
 
     public function latestPrice()

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\UpdateProductRequest;
 use App\Models\Product;
 use App\Models\Price;
+use App\Models\Artisan;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
@@ -14,7 +15,6 @@ use Illuminate\Support\Facades\DB;
 class ProductController extends Controller
 {
  
-
     public function index1()
     {
 
@@ -79,16 +79,32 @@ class ProductController extends Controller
     }
 
     
-    public function index()
+    public function index(Request $request)
     {
+        $artisanId = $request->query('artisan'); //1 artisan a t'il été sélectionné?
+
         // Affiche tous les produits avec leur prix
-        $products = Product::with(['prices' => function ($query) {
+        // Liste de base des produits
+        $query = Product::with(['prices' => function ($query) {
             $query->whereNull('deleted_at')
                   ->with('artisan:id,name');
-        }])->whereNull('deleted_at') 
-            ->get();
+        }])->whereNull('deleted_at');
 
-        return view('products.index', compact('products'));
+        // Si un artisan est sélectionné dans la requête
+        if ($artisanId) {
+            $query->whereHas('prices', function ($q) use ($artisanId) {
+                $q->where('id_artisan', $artisanId);
+            });
+        }    
+
+        $produits = $query::orderBy('name')->get();
+
+        //vérification si le user est l'artisan sélectionné
+        $user = Auth::user();
+        $userArtisanId = $user && $user->artisan ? $user->artisan->id : null;
+        $isOwner = $userArtisanId && $userArtisanId == $artisanId;
+
+        return view('products.index', compact('products','artisanId','isOwner'));
     }
 
      /**
@@ -106,15 +122,24 @@ class ProductController extends Controller
         return response()->json($product);
     }
 
+    public function create()
+    {
+        $user = Auth::user();
+        if (!$user || !$user->artisan) {
+            abort(403, 'Accès interdit');
+        }
+        return view('products.create');
+    }
+
     public function addProduct(Request $request)
     {
         //récupération code artisan
         $user = Auth::user();
-        $artisanId = optional($user->artisan)->id; // Sécurité si l’utilisateur n’a pas d’artisan lié
-        //ne devrait pas être car seuls les artisans ont accès au crud
-        if (!$artisanId) {
-            return response()->json(['error' => 'Aucun artisan lié à cet utilisateur'], 403);
+        if (!$user || !$user->artisan) {
+            abort(403, 'Accès interdit');
         }
+        
+        $artisanId = $request->query('artisan'); 
 
         //sinon si ajouté fonction EnsureUserIsArtisan dans le kernel:
         //$artisan = $request->artisan;
@@ -158,7 +183,7 @@ class ProductController extends Controller
             $products = Product::with(['prices' => function ($query) use ($artisanId) {
                 $query->where('id_artisan', $artisanId);
             }])->get();
-            return redirect()->route('products.create', compact('products'))
+            return redirect()->route('products.index', compact('products'),$artisanId, true)
                 ->with('success', 'Produit créé avec succès.');
 
         } catch (\Exception $e) {
@@ -169,20 +194,38 @@ class ProductController extends Controller
         }
     }
     
+  public function edit(Product $product)
+    {
+        $user = Auth::user();
+        if (!$user || !$user->artisan) {
+            abort(403, 'Accès interdit');
+        }
 
-    public function updProduct(Request $request, $id)
+        // Vérifier que l’artisan connecté possède au moins un prix pour ce produit
+        if (!$product->prices->contains('id_artisan', $user->artisan->id)) {
+            abort(403, 'Accès interdit');
+        }
+
+        // On récupère le prix de l’artisan connecté
+        $price = $product->prices->firstWhere('id_artisan', $user->artisan->id);
+
+        return view('products.edit', compact('product', 'price'));
+    }
+
+    public function updProduct(Request $request,Product $product)
     {
         //récupération code artisan
         $user = Auth::user();
-        $artisanId = optional($user->artisan)->id; // Sécurité si l’utilisateur n’a pas d’artisan lié
-        if (!$artisanId) {
-            return response()->json(['error' => 'Aucun artisan lié à cet utilisateur'], 403);
+        if (!$user || !$user->artisan) {
+            abort(403, 'Accès interdit');
         }
+        $artisanId = $request->query('artisan'); 
 
         //sinon si ajouté fonction EnsureUserIsArtisan dans le kernel:
         //$artisan = $request->artisan;
 
-        $product = Product::whereNull('deleted_at')->findOrFail($id);
+       // $product = Product::whereNull('deleted_at')->findOrFail($id);
+       $id = $product-> id;
 
         // récupère le produit saisi et le modifie dans la base
         $validated = $request->validate([
@@ -237,7 +280,7 @@ class ProductController extends Controller
             $products = Product::with(['prices' => function ($query) use ($artisanId) {
                 $query->where('id_artisan', $artisanId);
             }])->get();
-            return redirect()->route('products.update')
+            return redirect()->route('products.index', compact('products'),$artisanId, true)
                 ->with('success', 'Produit mis à jour avec succès.');
 
         } catch (\Exception $e) {
@@ -256,72 +299,27 @@ class ProductController extends Controller
     {
          //récupération code artisan
         $user = Auth::user();
-        $artisanId = optional($user->artisan)->id; // Sécurité si l’utilisateur n’a pas d’artisan lié
-        if (!$artisanId) {
-            return response()->json(['error' => 'Aucun artisan lié à cet utilisateur'], 403);
-        }
+        if (!$user || !$user->artisan) abort(403, 'Accès interdit');
 
-        //sinon si ajouté fonction EnsureUserIsArtisan dans le kernel:
-        //$artisan = $request->artisan;
-        
         $product = Product::whereNull('deleted_at')->findOrFail($id);
-        
-        // Vérifier que l'artisan est le créateur - ne devrait pas arriver car que produits de l'artisan
-        if ($product->id_artisan_creator !== $artisanId) {
-            return response()->json([
-                'message' => 'Vous n\'êtes pas autorisé à supprimer ce produit'
-            ], 403);
-        }
-        
-        DB::beginTransaction();
-        
-        try {
-            // Soft delete du produit
-            $product->update([
-                'deleted_at' => now()
-            ]);
-            
-            // Soft delete de tous les prix associés
-            Price::where('id_product', $product->id)
-                ->where('id_artisan', $artisanId)
-                ->whereNull('deleted_at')
-                ->update([
-                    'deleted_at' => now()
-                ]);
-            
-            DB::commit();
-            
-            //récupération de la liste de tous les produits de l'utilisateur 
-            $products = Product::with(['prix' => function ($query) use ($artisanId) {
-                $query->where('id_artisan', $artisanId);
-            }])->get();
-            return redirect()->route('products.update')
-                ->with('success', 'Produit supprimé avec succès');
-            
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return redirect()->back()
-                ->withInput()
-                ->with('error', 'Erreur lors de la suppression: ' . $e->getMessage());
-        }
+        $price = $product->prices->firstWhere('id_artisan', $user->artisan->id);
+        if (!$price) abort(403, 'Accès interdit');
+        $artisanId = $user->artisan->id;
+
+        $price->delete(); // Supprime seulement le prix de cet artisan
+
+        // Optionnel : si plus aucun prix n’existe pour ce produit, supprimer le produit
+        if ($product->prices()->count() == 0) {
+            $product->delete();
+        }        
+    
+        //récupération de la liste de tous les produits de l'utilisateur 
+        $products = Product::with(['prix' => function ($query) use ($artisanId) {
+            $query->where('id_artisan', $artisanId);
+        }])->get();
+        return redirect()->route('products.index', compact('products'),$artisanId, true)
+            ->with('success', 'Produit supprimé avec succès');       
+
     }
 
-    // public function updValid(String $id,UpdateProductRequest $request): RedirectResponse
-    // {
-    //     $validate = $request->validated();
-
-    //     if (!empty($validate["image"]) && $validate["image"] != "undefinrd") {
-    //         $path = $request->file("image")->storePublicly("productsImg", "public");
-    //         $product->image = $path;
-    //     }
-
-    //     $product->name = $validate["name"];
-    //     $product->description = $validate["description"];
-    //     $price->price = $validate["price"];
-    //     $price->artisant_id = $validate->user()->id;
-
-    //     $product->save();
-    //     // rend la main à l'écran d'origine?    
-    //     return redirect('/artisan/dashboard');
-    // }
 }
