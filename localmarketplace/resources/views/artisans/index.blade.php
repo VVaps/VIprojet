@@ -14,6 +14,8 @@
                                 <h3 class="text-xl font-semibold text-gray-900 mb-2">{{ $artisan->name }}</h3>
                                 <p class="text-gray-600 mb-4">{{ $artisan->description }}</p>
                                 <p class="text-sm text-gray-500">{{ $artisan->address }}</p>
+                                <p class="text-sm text-gray-500">{{ $artisan->email }}?? pas d'email</p>
+                                <p class="text-sm text-gray-500">{{ $artisan->phone }}?? pas de téléphone</p>
                                 <button class="mt-4 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition duration-300">
                                     Voir les produits
                                 </button>

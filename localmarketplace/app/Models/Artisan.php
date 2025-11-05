@@ -10,7 +10,7 @@ class Artisan extends Model
 
     public function user()
     {
-        return $this->belongsTo(User::class, 'user_id');
+        return $this->belongsTo(User::class, 'id_user');
     }
 
     public function price()

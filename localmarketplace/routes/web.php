@@ -8,15 +8,24 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
-Route::get('/products', [ProductController::class, 'show'])->name('products.index');
+Route::get('/products/{id}', [ProductController::class, 'show'])->name('products.index');
+Route::get('/artisans', [ArtisanController::class, 'index'])->name('artisans.index');
+Route::get('/artisans/{id}', [ArtisanController::class, 'show'])->name('artisans.index');
 
     // Routes protégées (nécessitent authentification + statut artisan)
-Route::middleware(['auth:sanctum', 'artisan'])->group(function () {
+Route::middleware(['auth'])->group(function () {
     Route::post('/products', [ProductController::class, 'addProduct'])->name('products.create');
     Route::put('/products', [ProductController::class, 'updProduct'])->name('products.update');
     Route::delete('/products', [ProductController::class, 'delProduct'])->name('products.update');
 });
-Route::get('/artisans', [ArtisanController::class, 'index'])->name('artisans.index');
+
+    // Routes protégées (nécessitent authentification + statut artisan)
+Route::middleware(['auth'])->group(function () {
+    Route::post('/artisans', [ArtisanController::class, 'addArtisant'])->name('artisans.index');
+    Route::put('/artisans', [ArtisanController::class, 'updArtisan'])->name('artisans.indexe');
+    Route::delete('/artisans', [ArtisanController::class, 'delArtisan'])->name('artisans.index');
+});
+
 
 Route::get('/dashboard', function () {
     return view('dashboard');
