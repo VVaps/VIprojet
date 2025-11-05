@@ -45,7 +45,7 @@ class ArtisanController extends Controller
     
     public function index()
     {
-        $artisans = Artisan::with('user')->get();
+        $artisans = Artisan::all();
 
         return view('artisans.index', compact('artisans'));
     }
@@ -55,6 +55,13 @@ class ArtisanController extends Controller
         return view('artisans.index', compact('artisan'));
     }
     
+    // Formulaire création (auth)
+    public function create()
+    {
+        return view('artisans.create');
+    }
+
+
     public function addArtisan(Artisan $artisan){
         
         if ($artisan->id_user !== Auth::id()) { abort(403, 'Accès non autorisé.');}
@@ -75,9 +82,19 @@ class ArtisanController extends Controller
 
     }
 
-    public function updArtisan(Artisan $artisan)
+    // Formulaire mise à jour (auth, propriétaire)
+    public function edit(Artisan $artisan)
     {
+         if ($artisan->id_user !== Auth::id()) { abort(403, 'Accès non autorisé.'); }
+        return view('artisans.edit', compact('artisan'));
+    }
+
+    //mise à jour
+    public function updArtisan(Request $request, Artisan $artisan)
+    {
+
         if ($artisan->id_user !== Auth::id()) { abort(403, 'Accès non autorisé.'); }
+
         $validated = $artisan->validate([
             'name' => 'required|string|max:255',
             'address' => 'required|string|max:255',
@@ -96,6 +113,8 @@ class ArtisanController extends Controller
 
     public function delArtisant(Artisan $artisan)
     {
+         if ($artisan->id_user !== Auth::id()) { abort(403, 'Accès non autorisé.'); }
+         
         $artisan->delete();
         return redirect()->route('artisans.index')->with('success', 'Artisan supprimé.');
     }

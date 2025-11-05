@@ -6,6 +6,10 @@
                     <h1 class="text-3xl font-bold text-gray-900 mb-6">Nos Artisans</h1>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        @auth
+                            <a href="{{ route('artisans.create') }}" class="btn btn-primary mb-3">Créer un compte artisan</a>
+                        @endauth
+
                         @foreach($artisans as $artisan)
                             <div class="bg-gray-50 rounded-lg p-6 text-center hover:shadow-md transition duration-300">
                                 <div class="w-24 h-24 bg-gray-300 rounded-full mx-auto mb-4 flex items-center justify-center">
@@ -19,6 +23,20 @@
                                 <button class="mt-4 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition duration-300">
                                     Voir les produits
                                 </button>
+                                @can('update', $artisan)
+                                    <a href="{{ route('artisans.edit', $artisan->id) }}" class="btn btn-warning btn-sm">Modifier</a>
+                                @endcan
+
+                                @can('delete', $artisan)
+                                    <form action="{{ route('artisans.delete', $artisan->id) }}" method="POST" style="display:inline;">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-danger btn-sm"
+                                                onclick="return confirm('Voulez-vous vraiment supprimer ce compte artisan ?')">
+                                            Supprimer
+                                        </button>
+                                    </form>
+                                @endcan
                             </div>
                         @endforeach
                     </div>
