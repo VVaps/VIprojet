@@ -7,7 +7,28 @@
 
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         @auth
-                            <a href="{{ route('artisans.create') }}" class="btn btn-primary mb-3">Créer un compte artisan</a>
+                            {{-- <a href="{{ route('artisans.create') }}" class="btn btn-primary mb-3">Créer un compte artisan</a> --}}
+                            <a href="{{ route('artisans.create') }}" class="create-link" data-list-url="{{ route('artisans.index') }}">
+                                Créer un compte artisan</a>   
+
+                            <script>
+                            document.addEventListener('DOMContentLoaded', function() {
+                                const link = document.querySelector('.create-link');
+                                
+                                link.addEventListener('click', function(e) {
+                                    e.preventDefault();
+                                    
+                                    // Condition : si l'utilisateur clique avec Ctrl/Cmd, créer
+                                    if (e.ctrlKey || e.metaKey) {
+                                        window.location.href = this.href;
+                                    } else {
+                                        // Sinon, charger la liste
+                                        window.location.href = this.dataset.listUrl;
+                                    }
+                                });
+                            });
+                            </script>    
+                                
                         @endauth
 
                         @foreach($artisans as $artisan)

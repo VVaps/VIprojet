@@ -97,7 +97,8 @@ class ProductController extends Controller
             });
         }    
 
-        $produits = $query::orderBy('name')->get();
+        // $products = $query::orderBy('name')->get();
+        $products = $query->get();
 
         //vérification si le user est l'artisan sélectionné
         $user = Auth::user();
