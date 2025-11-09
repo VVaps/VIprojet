@@ -4,16 +4,21 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Artisan extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
 
-    protected $table = 'artisan';
+    protected $table = 'artisans';
 
     protected $fillable = [
-        'name', 'address', 'rib', 'id_user', 'description',
+        'name',
+        'address',
+        'rib',
+        'phone',
+        'email',
+        'description',
+        'id_user'
     ];
 
     public function user()
@@ -23,13 +28,8 @@ class Artisan extends Model
 
     public function products()
     {
-        return $this->hasManyThrough(Product::class, Price::class, 'id_artisan', 'id', 'id', 'id_product')
+        return $this->hasManyThrough(Product::class, 'id_artisan', 'id', 'id', 'id_product')
                     ->with('prices');
-    }
-
-    public function prices()
-    {
-        return $this->hasMany(Price::class, 'id_artisan');
     }
 
 }

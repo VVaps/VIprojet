@@ -19,7 +19,6 @@ return new class extends Migration
             $table->string('email')->nullable();
             $table->string('phone')->nullable();
             $table->timestamps();
-            $table->softDeletes(); // ajoute la colonne deleted_at (nullable DATETIME)
     
             // clé étrangère vers users
             $table->foreign('id_user')->references('id')->on('users')->onDelete('cascade');

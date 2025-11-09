@@ -47,8 +47,13 @@ class User extends Authenticatable
         ];
     }
 
-     public function artisan()
+    public function artisans()
     {
-        return $this->hasOne(Artisan::class, 'id_user');
+        return $this->hasMany(Artisan::class, 'id_user');
+    }
+
+    public function isArtisan()
+    {
+        return $this->artisans()->exists();
     }
 }
