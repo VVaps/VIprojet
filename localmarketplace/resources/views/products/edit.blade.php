@@ -1,6 +1,4 @@
-@extends('layouts.app')
-
-@section('content')
+<x-app-layout>
 <div class="container">
     <h1>Modifier le produit</h1>
 
@@ -8,6 +6,7 @@
         @csrf
         @method('PUT')
 
+        <input type="hidden" name="artisan_id" value="{{ $product->artisan_id }}">
         <div class="mb-3">
             <label for="name" class="form-label">Nom du produit</label>
             <input type="text" name="name" value="{{ $product->name }}" class="form-control" required>
@@ -20,15 +19,12 @@
 
         <div class="mb-3">
             <label for="price" class="form-label">Prix (€)</label>
-            <input type="number" step="0.01" name="price" value="{{ $price->price }}" class="form-control" required>
+            <input type="number" step="0.01" name="price" value="{{ $product->price }}" class="form-control" required>
         </div>
 
-        <div class="mb-3">
-            <label for="qty_available" class="form-label">Quantité disponible</label>
-            <input type="number" step="0.01" name="qty_available" value="{{ $price->qty_available }}" class="form-control">
-        </div>
 
         <button type="submit" class="btn btn-primary">Mettre à jour</button>
     </form>
 </div>
-@endsection
+</x-app-layout>
+

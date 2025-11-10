@@ -40,5 +40,9 @@ return [
         'api_key' => env('PEXELS_API_KEY'),
     ],
 
+    // 'fruit_api' => [
+    // 'url' => env('FRUIT_API_URL', 'https://api.example.com'),
+    // 'key' => env('FRUIT_API_KEY'),
+    // ],
 
 ];

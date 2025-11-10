@@ -17,34 +17,9 @@
 
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         @auth
-<<<<<<< HEAD
                             @if(Auth::user()->isArtisan())
                                 <a href="{{ route('artisans.create') }}" class="btn btn-primary mb-3">Créer un compte artisan</a>
                             @endif
-=======
-                            {{-- <a href="{{ route('artisans.create') }}" class="btn btn-primary mb-3">Créer un compte artisan</a> --}}
-                            <a href="{{ route('artisans.create') }}" class="create-link" data-list-url="{{ route('artisans.index') }}">
-                                Créer un compte artisan</a>   
-
-                            <script>
-                            document.addEventListener('DOMContentLoaded', function() {
-                                const link = document.querySelector('.create-link');
-                                
-                                link.addEventListener('click', function(e) {
-                                    e.preventDefault();
-                                    
-                                    // Condition : si l'utilisateur clique avec Ctrl/Cmd, créer
-                                    if (e.ctrlKey || e.metaKey) {
-                                        window.location.href = this.href;
-                                    } else {
-                                        // Sinon, charger la liste
-                                        window.location.href = this.dataset.listUrl;
-                                    }
-                                });
-                            });
-                            </script>    
-                                
->>>>>>> 61047acf51aca4de57c671ee0bc36f89b85b0554
                         @endauth
 
                         @if(session('success'))
@@ -76,9 +51,9 @@
                                     <p class="text-sm text-gray-500">{{ $artisan->address }}</p>
                                     <p class="text-sm text-gray-500">{{ $artisan->email ?? 'pas d\'email'}}</p>
                                     <p class="text-sm text-gray-500">{{ $artisan->phone }}</p>
-                                    <button class="mt-4 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition duration-300">
+                                    <a href="{{ route('products.index', compact('artisan')) }}" class="mt-4 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition duration-300">
                                         Voir les produits
-                                    </button>
+                                    </a>
                                     @auth
                                         @if($artisan->id_user === Auth::id())
                                             <a href="{{ route('artisans.edit', $artisan) }}" class="btn btn-sm btn-warning">
