@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Artisan;
-use App\Models\User;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;

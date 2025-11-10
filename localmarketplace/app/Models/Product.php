@@ -26,9 +26,9 @@ class Product extends Model
         'updated_at',
     ];
 
-    public function creator()
+    public function artisan()
     {
-        return $this->belongsTo(Artisan::class, 'id_artisan_creator');
+        return $this->belongsTo(Artisan::class, 'artisan_id');
     }
 }
 

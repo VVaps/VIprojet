@@ -28,8 +28,7 @@ class Artisan extends Model
 
     public function products()
     {
-        return $this->hasManyThrough(Product::class, 'id_artisan', 'id', 'id', 'id_product')
-                    ->with('prices');
+        return $this->hasMany(Product::class, 'artisan_id');
     }
 
 }

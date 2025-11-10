@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    // Pour Pexels (API images fruits et légumes gratuite)
+    'pexels' => [
+        'api_key' => env('PEXELS_API_KEY'),
+    ],
+
+
 ];
