@@ -3,9 +3,19 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+
+
 
 class Product extends Model
 {
+<<<<<<< HEAD
+=======
+     use HasFactory;
+
+    protected $table = 'products';
+
+>>>>>>> 4db345e8697054a6ed56fcfadea887a9e4ff6362
     protected $fillable = [
         'name',
         'description',
@@ -14,6 +24,7 @@ class Product extends Model
         'artisan_id',
     ];
 
+<<<<<<< HEAD
     /**
      * Get the artisan that owns the product.
      */
@@ -53,5 +64,17 @@ class Product extends Model
     public function orderItems()
     {
         return $this->hasMany(OrderItem::class);
+=======
+    protected $dates = [
+        'created_at',
+        'updated_at',
+    ];
+
+    public function artisan()
+    {
+        return $this->belongsTo(Artisan::class, 'artisan_id');
+>>>>>>> 4db345e8697054a6ed56fcfadea887a9e4ff6362
     }
 }
+
+

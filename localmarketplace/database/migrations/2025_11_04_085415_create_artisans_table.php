@@ -19,6 +19,9 @@ return new class extends Migration
             $table->string('email')->nullable();
             $table->string('phone')->nullable();
             $table->timestamps();
+    
+            // clé étrangère vers users
+            $table->foreign('id_user')->references('id')->on('users')->onDelete('cascade');
         });
     }
 
