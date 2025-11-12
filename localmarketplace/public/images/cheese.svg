@@ -1,0 +1,8 @@
+<svg width="200" height="150" xmlns="http://www.w3.org/2000/svg">
+  <rect width="200" height="150" fill="#F5DEB3"/>
+  <ellipse cx="100" cy="75" rx="50" ry="35" fill="#FFD700" stroke="#B8860B" stroke-width="2"/>
+  <circle cx="85" cy="70" r="5" fill="#DAA520"/>
+  <circle cx="115" cy="80" r="4" fill="#DAA520"/>
+  <circle cx="95" cy="85" r="3" fill="#DAA520"/>
+  <text x="100" y="130" text-anchor="middle" font-family="Arial" font-size="14" fill="#B8860B">Artisan Cheese</text>
+</svg>

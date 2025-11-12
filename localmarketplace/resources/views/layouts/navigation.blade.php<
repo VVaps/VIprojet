@@ -1,0 +1,415 @@
+<!-- Fixed navigation with proper Alpine.js scope and no conflicts -->
+<script>
+// Fixed navigation component with proper Alpine.js scope
+function navigationComponent() {
+  return {
+    open: false,
+    cartOpen: false,
+    cartItems: [],
+    cartCount: 0,
+    loading: false,
+    error: null,
+    _fetchController: null,
+    logoutLoading: false,
+    logoutError: null,
+
+    // Helper: read CSRF token reliably
+    getCsrf() {
+      const m = document.querySelector('meta[name="csrf-token"]');
+      return m ? m.getAttribute('content') : null;
+    },
+
+    // Enhanced logout functionality with comprehensive error handling
+    async confirmLogout() {
+      if (!confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
+        return;
+      }
+
+      this.logoutLoading = true;
+      this.logoutError = null;
+
+      try {
+        const csrf = this.getCsrf();
+        if (!csrf) {
+          throw new Error('CSRF token not found. Please refresh the page and try again.');
+        }
+
+        console.log('Starting logout process...');
+        const res = await fetch('/logout', {
+          method: 'POST',
+          headers: { 
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrf
+          }
+        });
+
+        console.log('Logout response status:', res.status);
+        console.log('Logout response headers:', Object.fromEntries(res.headers.entries()));
+
+        // Try to parse JSON response
+        let data;
+        try {
+          data = await res.json();
+        } catch (e) {
+          // If JSON parsing fails, try to get text
+          const text = await res.text();
+          console.error('Response is not JSON:', text);
+          throw new Error('Server returned an invalid response');
+        }
+
+        console.log('Logout response data:', data);
+
+        if (res.ok && data.success) {
+          console.log('Logout successful');
+          // Clear cart data
+          this.cartItems = [];
+          this.cartCount = 0;
+          
+          // Redirect if specified
+          if (data.redirect) {
+            console.log('Redirecting to:', data.redirect);
+            window.location.href = data.redirect;
+          } else {
+            console.log('Reloading page...');
+            // Fallback: reload page to update UI
+            window.location.reload();
+          }
+        } else {
+          throw new Error(data.message || 'Erreur lors de la déconnexion');
+        }
+      } catch (err) {
+        console.error('Logout error:', err);
+        this.logoutError = 'Erreur lors de la déconnexion: ' + err.message;
+        
+        // Show detailed error to user
+        alert('Erreur lors de la déconnexion: ' + err.message + '\n\nDétails techniques: ' + err.toString());
+        
+        // Fallback: try traditional form submission
+        console.log('Attempting fallback logout via form submission...');
+        await this.fallbackLogout();
+      } finally {
+        this.logoutLoading = false;
+      }
+    },
+
+    // Fallback logout using traditional form submission
+    async fallbackLogout() {
+      try {
+        // Create a temporary form
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/logout';
+        form.style.display = 'none';
+
+        // Add CSRF token
+        const csrfToken = this.getCsrf();
+        if (csrfToken) {
+          const csrfInput = document.createElement('input');
+          csrfInput.type = 'hidden';
+          csrfInput.name = '_token';
+          csrfInput.value = csrfToken;
+          form.appendChild(csrfInput);
+        }
+
+        // Add the form to body and submit
+        document.body.appendChild(form);
+        form.submit();
+        
+        console.log('Fallback logout form submitted');
+      } catch (err) {
+        console.error('Fallback logout failed:', err);
+        alert('Both logout methods failed. Please refresh the page and try again, or contact support.');
+      }
+    },
+
+    // Open cart and fetch items only when needed (or when forceReload true)
+    async openCart({ forceReload = false } = {}) {
+      this.cartOpen = true;
+
+      // Cancel any stale fetch before starting a new one
+      if (this._fetchController) {
+        this._fetchController.abort();
+        this._fetchController = null;
+      }
+
+      // Only load if local items empty or explicit refresh requested
+      if (this.cartItems.length === 0 || forceReload) {
+        await this.loadCart();
+      }
+    },
+
+    // Close cart (cancel any inflight fetch)
+    closeCart() {
+      this.cartOpen = false;
+      if (this._fetchController) {
+        this._fetchController.abort();
+        this._fetchController = null;
+      }
+    },
+
+    // Primary loader: fetch cart items from server with abort control
+    async loadCart() {
+      const csrf = this.getCsrf();
+      if (!csrf) {
+        console.warn('CSRF token not found — skipping cart load.');
+        return;
+      }
+
+      // AbortController to prevent race conditions if loadCart called multiple times
+      this._fetchController = new AbortController();
+      const signal = this._fetchController.signal;
+
+      this.loading = true;
+      this.error = null;
+
+      try {
+        const res = await fetch('/cart', {
+          method: 'GET',
+          headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf },
+          signal
+        });
+
+        if (!res.ok) {
+          throw new Error('Network response was not ok: ' + res.status);
+        }
+
+        const data = await res.json();
+
+        // Validate expected shape
+        if (data && data.success && Array.isArray(data.items)) {
+          // Normalize numeric values (ensure total_price present)
+          this.cartItems = data.items.map(item => {
+            // ensure item.total_price exists and is a number
+            const total_price = parseFloat(item.total_price ?? (item.quantity * (item.product?.price ?? 0))) || 0;
+            // copy safe product fields
+            const product = item.product || {};
+            return {
+              ...item,
+              quantity: Number(item.quantity || 0),
+              total_price,
+              product: {
+                name: product.name ?? '',
+                description: product.description ?? '',
+                price: Number(product.price ?? 0),
+                image: product.image ?? '/images/placeholder.svg'
+              }
+            };
+          });
+
+          // Prefer `total_count` if provided, else sum quantities
+          this.cartCount = Number(data.total_count ?? this.cartItems.reduce((s, i) => s + (Number(i.quantity) || 0), 0));
+        } else {
+          // Unexpected response; clear cart safely
+          console.warn('Unexpected /cart response shape, clearing local cart.');
+          this.cartItems = [];
+          this.cartCount = 0;
+        }
+      } catch (err) {
+        if (err.name === 'AbortError') {
+          // expected when we cancel previous requests
+          console.info('Cart load aborted.');
+        } else {
+          console.error('Error loading cart:', err);
+          this.error = 'Unable to load cart';
+        }
+      } finally {
+        this.loading = false;
+        // clear controller after completion
+        this._fetchController = null;
+      }
+    },
+
+    // Load only the cart count (badge). Lightweight.
+    async loadCartCount() {
+      const csrf = this.getCsrf();
+      if (!csrf) return;
+
+      try {
+        const res = await fetch('/cart/count', {
+          method: 'GET',
+          headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf }
+        });
+        const data = await res.json();
+        if (data && data.success) {
+          this.cartCount = Number(data.count ?? 0);
+        }
+      } catch (err) {
+        console.error('Error loading cart count:', err);
+      }
+    },
+
+    // Optimistic quantity update: update local state immediately, send request in background
+    async updateQuantity(itemId, newQuantity) {
+      if (newQuantity < 1) return;
+
+      // Find index and backup
+      const idx = this.cartItems.findIndex(i => i.id == itemId);
+      if (idx === -1) return;
+
+      // Backup for rollback
+      const backup = { ...this.cartItems[idx] };
+
+      // Optimistically update local item
+      const item = this.cartItems[idx];
+      item.quantity = Number(newQuantity);
+      item.total_price = Number((item.product?.price ?? 0) * item.quantity);
+      this.cartCount = this.cartItems.reduce((s, it) => s + (Number(it.quantity) || 0), 0);
+
+      const csrf = this.getCsrf();
+      if (!csrf) {
+        console.warn('CSRF missing — skipping server update.');
+        return;
+      }
+
+      try {
+        const res = await fetch(`/cart/${itemId}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': csrf
+          },
+          body: JSON.stringify({ quantity: item.quantity })
+        });
+
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          // Rollback on failure
+          console.warn('Update failed, rolling back:', data);
+          this.cartItems.splice(idx, 1, backup);
+          this.cartCount = this.cartItems.reduce((s, it) => s + (Number(it.quantity) || 0), 0);
+          // Optionally re-sync full cart if provided by response
+          if (data && data.items) {
+            await this.loadCart();
+          }
+        } else {
+          // If server returned authoritative totals, merge them
+          if (data.item) {
+            this.cartItems.splice(idx, 1, {
+              ...this.cartItems[idx],
+              ...data.item,
+              quantity: Number(data.item.quantity ?? this.cartItems[idx].quantity),
+              total_price: Number(data.item.total_price ?? this.cartItems[idx].total_price)
+            });
+            this.cartCount = Number(data.total_count ?? this.cartItems.reduce((s, it) => s + (Number(it.quantity) || 0), 0));
+          }
+        }
+      } catch (err) {
+        console.error('Error updating quantity:', err);
+        // rollback
+        this.cartItems.splice(idx, 1, backup);
+        this.cartCount = this.cartItems.reduce((s, it) => s + (Number(it.quantity) || 0), 0);
+      }
+    },
+
+    // Optimistic remove: remove local item, notify server; rollback on failure
+    async removeItem(itemId) {
+      const idx = this.cartItems.findIndex(i => i.id == itemId);
+      if (idx === -1) return;
+
+      const backup = this.cartItems[idx];
+      // Remove locally
+      this.cartItems.splice(idx, 1);
+      this.cartCount = this.cartItems.reduce((s, it) => s + (Number(it.quantity) || 0), 0);
+
+      const csrf = this.getCsrf();
+      if (!csrf) {
+        console.warn('CSRF missing — skipping server remove.');
+        return;
+      }
+
+      try {
+        const res = await fetch(`/cart/${itemId}`, {
+          method: 'DELETE',
+          headers: {
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': csrf
+          }
+        });
+
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          console.warn('Remove failed, rolling back.', data);
+          // rollback
+          this.cartItems.splice(idx, 0, backup);
+          this.cartCount = this.cartItems.reduce((s, it) => s + (Number(it.quantity) || 0), 0);
+        } else {
+          // server may provide updated total_count
+          if (data.total_count !== undefined) {
+            this.cartCount = Number(data.total_count);
+          }
+        }
+      } catch (err) {
+        console.error('Error removing item:', err);
+        // rollback on error
+        this.cartItems.splice(idx, 0, backup);
+        this.cartCount = this.cartItems.reduce((s, it) => s + (Number(it.quantity) || 0), 0);
+      }
+    },
+
+    // Clear cart: empties local state after server confirmation
+    async clearCart() {
+      if (!confirm('Êtes-vous sûr de vouloir vider votre panier ?')) return;
+
+      const csrf = this.getCsrf();
+      if (!csrf) {
+        console.warn('CSRF missing — skipping clear.');
+        return;
+      }
+
+      try {
+        const res = await fetch('/cart/clear', {
+          method: 'DELETE',
+          headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf }
+        });
+
+        const data = await res.json();
+        if (res.ok && data.success) {
+          this.cartItems = [];
+          this.cartCount = 0;
+        } else {
+          console.warn('Clear cart failed:', data);
+        }
+      } catch (err) {
+        console.error('Error clearing cart:', err);
+      }
+    },
+
+    getTotal() {
+      return this.cartItems.reduce((total, item) => total + Number(item.total_price || 0), 0);
+    },
+
+    // init called by Alpine
+    init() {
+      // load badge count once on init
+      this.loadCartCount();
+      
+      // Log initialization for debugging
+      console.log('Navigation component initialized');
+      console.log('CSRF Token available:', !!this.getCsrf());
+    }
+  };
+}
+
+// Initialize after DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('DOM loaded, initializing components...');
+  
+  // Wait a bit for Alpine to initialize
+  setTimeout(() => {
+    const navComponent = document.querySelector('nav[x-data]');
+    if (navComponent && navComponent._x_dataStack) {
+      const data = navComponent._x_dataStack[0];
+      if (data) {
+        console.log('Navigation component found and initialized');
+        if (typeof data.loadCartCount === 'function') {
+          data.loadCartCount();
+        }
+      }
+    } else {
+      console.warn('Navigation component not found or not initialized');
+    }
+  }, 200);
+});
+</script>
