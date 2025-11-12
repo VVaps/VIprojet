@@ -1,179 +1,148 @@
-<<<<<<< HEAD
-@extends('layouts.app')
-
-@section('title', 'Modifier le produit')
-
-@section('content')
-<div class="container mx-auto px-4 py-8">
-    <div class="max-w-2xl mx-auto">
-        <div class="mb-6">
-            <h1 class="text-3xl font-bold text-gray-900">Modifier le produit</h1>
-            <p class="mt-2 text-gray-600">Modifiez les informations du produit ci-dessous.</p>
-        </div>
-
-        <div class="bg-white shadow-lg rounded-lg p-6">
-            <form action="{{ route('products.update', $product) }}" method="POST" enctype="multipart/form-data">
-                @csrf
-                @method('PATCH')
-                
-                <div class="space-y-6">
-                    <!-- Nom du produit -->
-                    <div>
-                        <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
-                            Nom du produit *
-                        </label>
-                        <input type="text" 
-                               name="name" 
-                               id="name" 
-                               value="{{ old('name', $product->name) }}" 
-                               required
-                               class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 @error('name') border-red-500 @enderror">
-                        @error('name')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <!-- Description -->
-                    <div>
-                        <label for="description" class="block text-sm font-medium text-gray-700 mb-2">
-                            Description *
-                        </label>
-                        <textarea name="description" 
-                                  id="description" 
-                                  rows="4" 
-                                  required
-                                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 @error('description') border-red-500 @enderror">{{ old('description', $product->description) }}</textarea>
-                        @error('description')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <!-- Prix -->
-                    <div>
-                        <label for="price" class="block text-sm font-medium text-gray-700 mb-2">
-                            Prix (€) *
-                        </label>
-                        <input type="number" 
-                               name="price" 
-                               id="price" 
-                               value="{{ old('price', $product->price) }}" 
-                               step="0.01" 
-                               min="0"
-                               required
-                               class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 @error('price') border-red-500 @enderror">
-                        @error('price')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <!-- Artisan -->
-                    <div>
-                        <label for="artisan_id" class="block text-sm font-medium text-gray-700 mb-2">
-                            Artisan *
-                        </label>
-                        <select name="artisan_id" 
-                                id="artisan_id" 
-                                required
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 @error('artisan_id') border-red-500 @enderror">
-                            <option value="">Sélectionnez un artisan</option>
-                            @foreach($artisans as $artisan)
-                                <option value="{{ $artisan->id }}" {{ old('artisan_id', $product->artisan_id) == $artisan->id ? 'selected' : '' }}>
-                                    {{ $artisan->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('artisan_id')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <!-- Image actuelle -->
-                    @if($product->image)
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                            Image actuelle
-                        </label>
-                        <img src="{{ asset('storage/' . $product->image) }}" 
-                             alt="{{ $product->name }}" 
-                             class="w-32 h-32 object-cover rounded-lg border">
-                    </div>
-                    @endif
-
-                    <!-- Image -->
-                    <div>
-                        <label for="image" class="block text-sm font-medium text-gray-700 mb-2">
-                            {{ $product->image ? 'Remplacer l\'image' : 'Image du produit' }}
-                        </label>
-                        <input type="file" 
-                               name="image" 
-                               id="image" 
-                               accept="image/*"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 @error('image') border-red-500 @enderror">
-                        @error('image')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                        <p class="mt-1 text-sm text-gray-500">Formats acceptés: JPEG, PNG, JPG, GIF (max 2MB)</p>
-                    </div>
+<x-app-layout>
+    <div class="py-12">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            <div class="max-w-2xl mx-auto">
+                <div class="mb-6">
+                    <h1 class="text-3xl font-bold text-gray-900">Modifier le produit</h1>
+                    <p class="mt-2 text-gray-600">Modifiez les informations du produit ci-dessous.</p>
                 </div>
 
-                <div class="mt-8 flex justify-between">
-                    <div class="flex space-x-4">
-                        <button type="submit" 
-                                class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                            Sauvegarder les modifications
-                        </button>
-                        <a href="{{ route('products.show', $product) }}" 
-                           class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                            Annuler
-                        </a>
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                    <div class="p-6 bg-white border-b border-gray-200">
+                        <form action="{{ route('products.update', $product) }}" method="POST" enctype="multipart/form-data">
+                            @csrf
+                            @method('PATCH')
+                            
+                            <div class="space-y-6">
+                                <!-- Nom du produit -->
+                                <div>
+                                    <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
+                                        Nom du produit *
+                                    </label>
+                                    <input type="text" 
+                                           name="name" 
+                                           id="name" 
+                                           value="{{ old('name', $product->name) }}" 
+                                           required
+                                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm @error('name') border-red-500 @enderror">
+                                    @error('name')
+                                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                    @enderror
+                                </div>
+
+                                <!-- Description -->
+                                <div>
+                                    <label for="description" class="block text-sm font-medium text-gray-700 mb-2">
+                                        Description *
+                                    </label>
+                                    <textarea name="description" 
+                                              id="description" 
+                                              rows="4" 
+                                              required
+                                              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm @error('description') border-red-500 @enderror">{{ old('description', $product->description) }}</textarea>
+                                    @error('description')
+                                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                    @enderror
+                                </div>
+
+                                <!-- Prix -->
+                                <div>
+                                    <label for="price" class="block text-sm font-medium text-gray-700 mb-2">
+                                        Prix (€) *
+                                    </label>
+                                    <input type="number" 
+                                           name="price" 
+                                           id="price" 
+                                           value="{{ old('price', $product->price) }}" 
+                                           step="0.01" 
+                                           min="0"
+                                           required
+                                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm @error('price') border-red-500 @enderror">
+                                    @error('price')
+                                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                    @enderror
+                                </div>
+
+                                <!-- Artisan -->
+                                <div>
+                                    <label for="artisan_id" class="block text-sm font-medium text-gray-700 mb-2">
+                                        Artisan *
+                                    </label>
+                                    <select name="artisan_id" 
+                                            id="artisan_id" 
+                                            required
+                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm @error('artisan_id') border-red-500 @enderror">
+                                        <option value="">Sélectionnez un artisan</option>
+                                        @foreach($artisans as $artisan)
+                                            <option value="{{ $artisan->id }}" {{ old('artisan_id', $product->artisan_id) == $artisan->id ? 'selected' : '' }}>
+                                                {{ $artisan->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('artisan_id')
+                                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                    @enderror
+                                </div>
+
+                                <!-- Image actuelle -->
+                                @if($product->image)
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        Image actuelle
+                                    </label>
+                                    <img src="{{ asset('storage/' . $product->image) }}" 
+                                         alt="{{ $product->name }}" 
+                                         class="w-32 h-32 object-cover rounded-lg border">
+                                </div>
+                                @endif
+
+                                <!-- Image -->
+                                <div>
+                                    <label for="image" class="block text-sm font-medium text-gray-700 mb-2">
+                                        {{ $product->image ? 'Remplacer l\'image' : 'Image du produit' }}
+                                    </label>
+                                    <input type="file" 
+                                           name="image" 
+                                           id="image" 
+                                           accept="image/*"
+                                           class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 @error('image') border-red-500 @enderror">
+                                    @error('image')
+                                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                    @enderror
+                                    <p class="mt-1 text-sm text-gray-500">Formats acceptés: JPEG, PNG, JPG, GIF (max 2MB)</p>
+                                </div>
+                            </div>
+
+                            <div class="mt-8 flex justify-between">
+                                <div class="flex space-x-4">
+                                    <button type="submit"
+                                            class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                        Sauvegarder les modifications
+                                    </button>
+                                    <a href="{{ route('products.show', $product) }}"
+                                       class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                        Annuler
+                                    </a>
+                                </div>
+                            </div>
+                        </form>
+                        
+                        <!-- Separate delete form -->
+                        <div class="mt-4 border-t pt-4">
+                            <form action="{{ route('products.destroy', $product) }}"
+                                  method="POST"
+                                  onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce produit ?');">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit"
+                                        class="inline-flex items-center px-4 py-2 border border-red-300 rounded-md shadow-sm text-sm font-medium text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                                    Supprimer le produit
+                                </button>
+                            </form>
+                        </div>
                     </div>
-                    
-                    <form action="{{ route('products.destroy', $product) }}" 
-                          method="POST" 
-                          onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce produit ?');"
-                          class="inline">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" 
-                                class="inline-flex items-center px-4 py-2 border border-red-300 rounded-md shadow-sm text-sm font-medium text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
-                            Supprimer le produit
-                        </button>
-                    </form>
                 </div>
-            </form>
+            </div>
         </div>
     </div>
-</div>
-@endsection
-=======
-<x-app-layout>
-<div class="container">
-    <h1>Modifier le produit</h1>
-
-    <form method="POST" action="{{ route('products.update', $product->id) }}">
-        @csrf
-        @method('PUT')
-
-        <input type="hidden" name="artisan_id" value="{{ $product->artisan_id }}">
-        <div class="mb-3">
-            <label for="name" class="form-label">Nom du produit</label>
-            <input type="text" name="name" value="{{ $product->name }}" class="form-control" required>
-        </div>
-
-        <div class="mb-3">
-            <label for="description" class="form-label">Description</label>
-            <textarea name="description" class="form-control">{{ $product->description }}</textarea>
-        </div>
-
-        <div class="mb-3">
-            <label for="price" class="form-label">Prix (€)</label>
-            <input type="number" step="0.01" name="price" value="{{ $product->price }}" class="form-control" required>
-        </div>
-
-
-        <button type="submit" class="btn btn-primary">Mettre à jour</button>
-    </form>
-</div>
 </x-app-layout>
-
->>>>>>> 4db345e8697054a6ed56fcfadea887a9e4ff6362

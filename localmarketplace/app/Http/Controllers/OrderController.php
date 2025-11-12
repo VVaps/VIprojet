@@ -11,9 +11,10 @@ use Illuminate\Support\Facades\Auth;
 
 class OrderController extends Controller
 {
+    // Middleware is applied in routes/web.php
     public function __construct()
     {
-        $this->middleware('auth');
+        // Routes are already protected by 'auth' middleware in web.php
     }
 
     /**

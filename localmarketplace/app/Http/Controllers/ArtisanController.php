@@ -3,100 +3,135 @@
 namespace App\Http\Controllers;
 
 use App\Models\Artisan;
-
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-
 class ArtisanController extends Controller
 {
-   
+    /**
+     * Display a listing of the resource.
+     */
     public function index()
     {
         if (Auth::check() && Auth::user()->isArtisan()) {
-            // Si l'utilisateur est un artisan, montrer uniquement ses comptes
+            // If user is an artisan, show only their accounts
             $artisans = Auth::user()->artisans()->get();
         } else {
-            // Sinon, montrer tous les artisans
-            $artisans = Artisan::all();
+            // Otherwise, show all artisans
+            $artisans = Artisan::with('user')->get();
         }
 
         return view('artisans.index', compact('artisans'));
     }
 
-    public function show(Artisan $artisan)
-    {
-        return view('artisans.index', compact('artisan'));
-    }
-    
-    // Annulation lors de la création (uniquement si c'est le premier)
-    public function cancel()
-    {
-        return redirect()->route('dashboard')
-            ->with('info', 'Création du compte artisan annulée');
-    }
-
-    // Formulaire création (auth)
+    /**
+     * Show the form for creating a new resource.
+     */
     public function create()
     {
+        if (!Auth::check()) {
+            abort(403, 'Access denied. You must be logged in to create an artisan profile.');
+        }
+        
+        // Check if user already has an artisan profile
+        if (Auth::user()->artisans()->exists()) {
+            return redirect()->route('artisans.index')
+                ->with('error', 'Vous avez déjà un profil d\'artisan.');
+        }
+        
         return view('artisans.create');
     }
 
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request)
+    {
+        if (!Auth::check()) {
+            abort(403, 'Access denied. You must be logged in to create an artisan profile.');
+        }
 
-    public function addArtisan(Request $request){
-        
-        if (!Auth::user()->isArtisan()){ abort(403, 'Accès non autorisé.');}
+        // Check if user already has an artisan profile
+        if (Auth::user()->artisans()->exists()) {
+            return redirect()->route('artisans.index')
+                ->with('error', 'Vous avez déjà un profil d\'artisan.');
+        }
 
-       
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['string', 'lowercase', 'email', 'max:50'],
-            'phone' => ['required', 'string', 'lowercase', 'max:20'], 
-            'rib' => ['required','string', 'max:20'], 
-            'description' => ['string', 'max:1000'], 
+            'email' => ['nullable', 'string', 'lowercase', 'email', 'max:255'],
+            'phone' => ['required', 'string', 'max:20'], 
+            'rib' => ['required', 'string', 'max:20'], 
+            'description' => ['nullable', 'string', 'max:1000'], 
             'address' => ['required', 'string', 'max:255'], 
         ]);
-        $validated['id_user'] = Auth::id();
+
+        $validated['user_id'] = Auth::id();
+        
+        // Update user's type to artisan when creating first artisan profile
+        $user = Auth::user();
+        if ($user->user_type !== 'artisan') {
+            User::where('id', Auth::id())->update(['user_type' => 'artisan']);
+        }
 
         Artisan::create($validated);
 
         return redirect()->route('artisans.index')->with('success', 'Artisan créé avec succès.');
-
     }
 
-    // Formulaire mise à jour (auth, propriétaire)
+    /**
+     * Display the specified resource.
+     */
+    public function show(Artisan $artisan)
+    {
+        $artisan->load('user', 'products');
+        return view('artisans.show', compact('artisan'));
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
     public function edit(Artisan $artisan)
     {
-         if (!Auth::user()->isArtisan())  { abort(403, 'Accès non autorisé.'); }
+        if (!Auth::check() || $artisan->user_id !== Auth::id()) {
+            abort(403, 'Access denied.');
+        }
+        
         return view('artisans.edit', compact('artisan'));
     }
 
-    //mise à jour
-    public function updArtisan(Request $request, Artisan $artisan)
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, Artisan $artisan)
     {
-
-        if (!Auth::user()->isArtisan()) { abort(403, 'Accès non autorisé.'); }
+        if (!Auth::check() || $artisan->user_id !== Auth::id()) {
+            abort(403, 'Access denied.');
+        }
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['string', 'lowercase', 'email', 'max:50'],
-            'phone' => ['required', 'string', 'lowercase', 'max:20'], 
-            'rib' => ['required','string', 'max:20'], 
-            'description' => ['string', 'max:1000'], 
+            'email' => ['nullable', 'string', 'lowercase', 'email', 'max:255'],
+            'phone' => ['required', 'string', 'max:20'], 
+            'rib' => ['required', 'string', 'max:20'], 
+            'description' => ['nullable', 'string', 'max:1000'], 
             'address' => ['required', 'string', 'max:255'], 
         ]);
-        $validated['id_user'] = Auth::id();
 
         $artisan->update($validated);
 
-        return redirect()->route('artisans.index')->with('success', 'Artisan mis à jour.');
+        return redirect()->route('artisans.index')->with('success', 'Artisan mis à jour avec succès.');
     }
 
-
-    public function delArtisan(Artisan $artisan)
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(Artisan $artisan)
     {
-          if (!Auth::user()->isArtisan())  { abort(403, 'Accès non autorisé.'); }
-         
+        if (!Auth::check() || $artisan->user_id !== Auth::id()) {
+            abort(403, 'Access denied.');
+        }
         
         try {
             $artisan->delete();
@@ -106,5 +141,14 @@ class ArtisanController extends Controller
             return redirect()->route('artisans.index')
                 ->with('error', 'Impossible de supprimer cet artisan : il est lié à des produits ou d\'autres données.');
         }
+    }
+
+    /**
+     * Cancel creation (redirect only)
+     */
+    public function cancel()
+    {
+        return redirect()->route('dashboard')
+            ->with('info', 'Artisan creation cancelled');
     }
 }

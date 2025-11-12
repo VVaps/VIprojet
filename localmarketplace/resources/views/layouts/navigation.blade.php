@@ -437,6 +437,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     <x-nav-link :href="route('artisans.index')" :active="request()->routeIs('artisans.*')">
                         {{ __('Nos Artisans') }}
                     </x-nav-link>
+                    @auth
+                        <x-nav-link :href="route('orders.index')" :active="request()->routeIs('orders.*')">
+                            {{ __('Mes Commandes') }}
+                        </x-nav-link>
+                    @endauth
                 </div>
             </div>
 
@@ -470,8 +475,10 @@ document.addEventListener('DOMContentLoaded', function() {
                                 {{ __('Profile') }}
                             </x-dropdown-link>
 
+                            
+
                             <!-- Logout Option -->
-                            <button @click="confirmLogout" 
+                            <button @click="confirmLogout"
                                     :disabled="logoutLoading"
                                     class="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 disabled:opacity-50">
                                 <span x-show="!logoutLoading">Déconnexion</span>
@@ -521,6 +528,11 @@ document.addEventListener('DOMContentLoaded', function() {
             <x-responsive-nav-link :href="route('artisans.index')" :active="request()->routeIs('artisans.*')">
                 {{ __('Nos Artisans') }}
             </x-responsive-nav-link>
+            @auth
+                <x-responsive-nav-link :href="route('orders.index')" :active="request()->routeIs('orders.*')">
+                    {{ __('Mes Commandes') }}
+                </x-responsive-nav-link>
+            @endauth
         </div>
 
         <!-- Responsive Settings Options -->
@@ -545,8 +557,10 @@ document.addEventListener('DOMContentLoaded', function() {
                         {{ __('Profile') }}
                     </x-responsive-nav-link>
                     
+                    
+                    
                     <!-- Mobile Logout Button -->
-                    <button @click="confirmLogout" 
+                    <button @click="confirmLogout"
                             :disabled="logoutLoading"
                             class="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 disabled:opacity-50">
                         <span x-show="!logoutLoading">Déconnexion</span>

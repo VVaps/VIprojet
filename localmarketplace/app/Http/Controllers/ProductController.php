@@ -13,12 +13,31 @@ class ProductController extends Controller
     /**
      * Display a listing of products.
      */
-    public function index(?Artisan $artisan = null)
+    public function index(Request $request)
     {
-        $query = Product::with('artisan');
+        $query = Product::with(['artisan', 'comments.user']);
         
-        if ($artisan) {
-            $query->where('artisan_id', $artisan->id);
+        // Handle artisan filtering via query parameter
+        $artisan = null;
+        if ($request->has('artisan')) {
+            $artisan = Artisan::find($request->artisan);
+            if ($artisan) {
+                $query->where('artisan_id', $artisan->id);
+            }
+        }
+        
+        // Check if user wants to filter only their own products
+        $showOnlyMyProducts = $request->input('show_only_my_products') === '1';
+        
+        // If user is authenticated and wants to see only their products
+        if (Auth::check() && $showOnlyMyProducts) {
+            $userArtisanIds = Auth::user()->artisans->pluck('id');
+            if (!$userArtisanIds->isEmpty()) {
+                $query->whereIn('artisan_id', $userArtisanIds);
+            } else {
+                // User has no artisans, so return empty collection
+                $query->where('artisan_id', -1); // Impossible condition
+            }
         }
         
         $products = $query->latest()->paginate(12);
@@ -29,7 +48,10 @@ class ProductController extends Controller
             $isOwner = $artisan->user_id === Auth::id();
         }
         
-        return view('products.index', compact('products', 'artisan', 'isOwner'));
+        // Pass filter state to view
+        $showOnlyMyProducts = Auth::check() && $showOnlyMyProducts;
+        
+        return view('products.index', compact('products', 'artisan', 'isOwner', 'showOnlyMyProducts'));
     }
 
     /**
@@ -37,14 +59,29 @@ class ProductController extends Controller
      */
     public function create()
     {
-        // Get current user's artisans
-        $artisans = Auth::user()->artisans;
-        
-        if ($artisans->isEmpty()) {
-            return redirect()->route('artisans.index')->with('error', 'Vous devez avoir un profil d\'artisan pour créer un produit.');
-        }
+        try {
+            // Check if user is authenticated
+            if (!Auth::check()) {
+                return redirect()->route('login');
+            }
+            
+            // Check if user is artisan type
+            if (Auth::user()->user_type !== 'artisan') {
+                return redirect()->route('artisans.index')->with('error', 'Vous devez avoir un profil d\'artisan pour créer un produit.');
+            }
 
-        return view('products.create', compact('artisans'));
+            // Get current user's artisans
+            $artisans = Auth::user()->artisans;
+            
+            if ($artisans->isEmpty()) {
+                return redirect()->route('artisans.index')->with('error', 'Vous devez créer un profil d\'artisan pour créer un produit.');
+            }
+
+            return view('products.create', compact('artisans'));
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Error in ProductController@create: ' . $e->getMessage());
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     /**

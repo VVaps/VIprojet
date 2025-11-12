@@ -33,17 +33,6 @@ return new class extends Migration
             $table->decimal('total_price', 10, 2);
             $table->timestamps();
         });
-
-        // Cart items table (for current cart)
-        Schema::create('cart_items', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->foreignId('product_id')->constrained('products')->onDelete('cascade');
-            $table->integer('quantity')->default(1);
-            $table->timestamps();
-            
-            $table->unique(['user_id', 'product_id']);
-        });
     }
 
     /**
@@ -53,6 +42,5 @@ return new class extends Migration
     {
         Schema::dropIfExists('order_items');
         Schema::dropIfExists('orders');
-        Schema::dropIfExists('cart_items');
     }
 };

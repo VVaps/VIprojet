@@ -18,17 +18,16 @@ class Artisan extends Model
         'phone',
         'email',
         'description',
-        'id_user'
+        'user_id',
     ];
 
     public function user()
     {
-        return $this->belongsTo(User::class, 'id_user');
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     public function products()
     {
         return $this->hasMany(Product::class, 'artisan_id');
     }
-
 }

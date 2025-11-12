@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('artisans', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->text('description');
+            $table->text('description')->nullable();
             $table->string('address');
             $table->string('email')->nullable();
             $table->string('phone')->nullable();

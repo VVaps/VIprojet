@@ -11,9 +11,11 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
-// Product routes
+// Product routes (public access for viewing)
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
-Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
+Route::get('/products/{product}', [ProductController::class, 'show'])
+    ->where('product', '^(?!create$|edit$|delete$)[0-9A-Za-z_-]+$')
+    ->name('products.show');
 
 // Authenticated product management routes
 Route::middleware('auth')->group(function () {
@@ -24,9 +26,37 @@ Route::middleware('auth')->group(function () {
     Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
 });
 
-// Artisan routes
+// Artisan routes (public access for viewing, authenticated for management)
 Route::get('/artisans', [ArtisanController::class, 'index'])->name('artisans.index');
-Route::get('/artisans/{artisan}', [ArtisanController::class, 'show'])->name('artisans.show');
+Route::get('/artisans/{artisan}', [ArtisanController::class, 'show'])
+    ->where('artisan', '^(?!create$|edit$|delete$)[0-9A-Za-z_-]+$')
+    ->name('artisans.show');
+
+// Authenticated routes with proper scoping to prevent conflicts
+Route::middleware('auth')->group(function () {
+    // Artisan CRUD operations with scoping
+    Route::prefix('artisans')->name('artisans.')->group(function () {
+        Route::get('/create', [ArtisanController::class, 'create'])->name('create');
+        Route::post('/', [ArtisanController::class, 'store'])->name('store');
+        Route::get('/{artisan}/edit', [ArtisanController::class, 'edit'])->name('edit');
+        Route::patch('/{artisan}', [ArtisanController::class, 'update'])->name('update');
+        Route::delete('/{artisan}', [ArtisanController::class, 'destroy'])->name('destroy');
+    });
+    
+    // Comment routes with scoping
+    Route::prefix('products')->name('products.')->group(function () {
+        Route::post('/{product}/comments', [CommentController::class, 'store'])->name('comments.store');
+        Route::get('/{product}/comments', [CommentController::class, 'fetch'])->name('comments.fetch');
+    });
+    
+    // Order routes
+    Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+    Route::get('/orders/create', [OrderController::class, 'create'])->name('orders.create');
+    Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
+    Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+    Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
+    Route::patch('/orders/{order}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
+});
 
 // Cart routes (accessible to both guests and authenticated users)
 Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
@@ -44,18 +74,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-    
-    // Comment routes
-    Route::post('/products/{product}/comments', [CommentController::class, 'store'])->name('comments.store');
-    Route::get('/products/{product}/comments', [CommentController::class, 'fetch'])->name('comments.fetch');
-    
-    // Order routes
-    Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
-    Route::get('/orders/create', [OrderController::class, 'create'])->name('orders.create');
-    Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
-    Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
-    Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
-    Route::patch('/orders/{order}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
 });
 
 require __DIR__.'/auth.php';
