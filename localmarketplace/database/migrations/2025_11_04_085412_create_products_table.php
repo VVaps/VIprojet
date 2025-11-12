@@ -17,7 +17,7 @@ return new class extends Migration
             $table->text('description');
             $table->decimal('price', 8, 2);
             $table->string('image')->nullable();
-            $table->foreignId('artisan_id')->nullable()->constrained('artisans')->onDelete('set null');
+            $table->unsignedBigInteger('artisan_id')->nullable();
             $table->timestamps();
         });
     }
