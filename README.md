@@ -219,5 +219,6 @@ Dès qu'il est connecté les listes artisan et produits sont limitées aux sienn
 <img width="1271" height="487" alt="image" src="https://github.com/user-attachments/assets/7215e834-17b7-4592-9385-8d6470c983b0" />
 
 
-[ArtisLoca.pptx](https://github.com/user-attachments/files/23502937/ArtisLoca.pptx)
+
+[ArtisLoca (1).pptx](https://github.com/user-attachments/files/23503194/ArtisLoca.1.pptx)
 
