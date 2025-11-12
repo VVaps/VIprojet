@@ -9,7 +9,7 @@
                         <h1 class="text-4xl sm:text-6xl font-bold mb-4">Bienvenue sur ArtisLoca</h1>
                         <p class="text-xl sm:text-2xl mb-8">Découvrez l'artisanat local de qualité</p>
                         <a href="{{ route('products.index') }}" class="bg-white text-gray-900 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition duration-300">
-                            Explorer nos produits
+                            Tous nos produits
                         </a>
                     </div>
                 </div>
