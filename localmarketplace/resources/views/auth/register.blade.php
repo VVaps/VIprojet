@@ -37,16 +37,34 @@
                             name="password_confirmation" required autocomplete="new-password" />
 
             <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
-        </div>
-
-        <div class="flex items-center justify-end mt-4">
-            <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" href="{{ route('login') }}">
-                Déjà inscrit ?
-            </a>
-
-            <x-primary-button class="ms-4">
-                S'inscrire
-            </x-primary-button>
-        </div>
-    </form>
-</x-guest-layout>
+            </div>
+    
+            <!-- User Type Selection -->
+            <div class="mt-4">
+                <x-input-label for="user_type" value="Type de compte" />
+                <select id="user_type" name="user_type" class="block mt-1 w-full" required>
+                    <option value="">Sélectionnez votre type de compte</option>
+                    <option value="customer" {{ old('user_type') == 'customer' ? 'selected' : '' }}>
+                        Client - Je veux acheter des produits artisanaux
+                    </option>
+                    <option value="artisan" {{ old('user_type') == 'artisan' ? 'selected' : '' }}>
+                        Artisan - Je veux vendre mes produits artisanaux
+                    </option>
+                </select>
+                <x-input-error :messages="$errors->get('user_type')" class="mt-2" />
+                <p class="mt-1 text-sm text-gray-600">
+                    Cette sélection peut être modifiée plus tard depuis votre profil.
+                </p>
+            </div>
+    
+            <div class="flex items-center justify-end mt-4">
+                <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" href="{{ route('login') }}">
+                    Déjà inscrit ?
+                </a>
+    
+                <x-primary-button class="ms-4">
+                    S'inscrire
+                </x-primary-button>
+            </div>
+        </form>
+    </x-guest-layout>

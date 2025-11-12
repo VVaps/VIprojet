@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\User;
 use App\Models\Artisan;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -13,12 +14,17 @@ class ArtisanSeeder extends Seeder
      */
     public function run(): void
     {
+        // Get the test user
+        $user = User::where('email', 'test@example.com')->first();
+        $userId = $user ? $user->id : 1;
+
         Artisan::create([
             'name' => 'Marie Dubois',
             'description' => 'Passionate baker specializing in traditional French breads and pastries.',
             'address' => 'Paris, France',
             'email' => 'marie.dubois@example.com',
             'phone' => '+33 1 23 45 67 89',
+            'user_id' => $userId,
         ]);
 
         Artisan::create([
@@ -27,6 +33,7 @@ class ArtisanSeeder extends Seeder
             'address' => 'Lyon, France',
             'email' => 'jp.martin@example.com',
             'phone' => '+33 4 56 78 90 12',
+            'user_id' => $userId,
         ]);
     }
 }

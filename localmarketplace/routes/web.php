@@ -10,8 +10,20 @@ use App\Http\Controllers\OrderController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
+
+// Product routes
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
 Route::get('/products/{id}', [ProductController::class, 'show'])->name('products.show');
+
+// Authenticated product management routes
+Route::middleware('auth')->group(function () {
+    Route::get('/products/create', [ProductController::class, 'create'])->name('products.create');
+    Route::post('/products', [ProductController::class, 'store'])->name('products.store');
+    Route::get('/products/{id}/edit', [ProductController::class, 'edit'])->name('products.edit');
+    Route::patch('/products/{id}', [ProductController::class, 'update'])->name('products.update');
+    Route::delete('/products/{id}', [ProductController::class, 'destroy'])->name('products.destroy');
+});
+
 Route::get('/artisans', [ArtisanController::class, 'index'])->name('artisans.index');
 
 // Cart routes (accessible to both guests and authenticated users)

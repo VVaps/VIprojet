@@ -7,6 +7,18 @@
                 <div class="p-6 bg-white border-b border-gray-200">
                     <h1 class="text-3xl font-bold text-gray-900 mb-6">Nos Produits</h1>
 
+                    @auth
+                    <div class="mb-6">
+                        <a href="{{ route('products.create') }}"
+                           class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                            </svg>
+                            Créer un produit
+                        </a>
+                    </div>
+                    @endauth
+
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         @foreach($products as $product)
                             <div class="bg-gray-50 rounded-lg overflow-hidden shadow-md hover:shadow-lg transition duration-300">
@@ -15,7 +27,10 @@
                                 </div>
                                 <div class="p-6">
                                     <h3 class="text-xl font-semibold text-gray-900 mb-2">{{ $product->name }}</h3>
-                                    <p class="text-gray-600 mb-4">{{ Str::limit($product->description, 80) }}</p>
+                                    <p class="text-gray-600 mb-2">{{ Str::limit($product->description, 80) }}</p>
+                                    @if($product->artisan)
+                                        <p class="text-sm text-gray-500 mb-4">Par: {{ $product->artisan->name }}</p>
+                                    @endif
                                     <div class="flex justify-between items-center mb-4">
                                         <span class="text-2xl font-bold text-green-600">{{ number_format($product->price, 2) }} €</span>
                                     </div>
@@ -28,6 +43,28 @@
                                             Ajouter au panier
                                         </button>
                                     </div>
+                                    
+                                    @auth
+                                        @if(auth()->user()->artisans->contains($product->artisan_id))
+                                        <div class="mt-3 flex space-x-2 border-t pt-3">
+                                            <a href="{{ route('products.edit', $product->id) }}"
+                                               class="flex-1 bg-yellow-600 text-white px-3 py-1 rounded text-sm text-center hover:bg-yellow-700 transition duration-300">
+                                                Modifier
+                                            </a>
+                                            <form action="{{ route('products.destroy', $product->id) }}"
+                                                  method="POST"
+                                                  onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce produit ?');"
+                                                  class="flex-1">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit"
+                                                        class="w-full bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700 transition duration-300">
+                                                    Supprimer
+                                                </button>
+                                            </form>
+                                        </div>
+                                        @endif
+                                    @endauth
                                 </div>
                             </div>
                         @endforeach

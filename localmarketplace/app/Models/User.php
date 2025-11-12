@@ -21,6 +21,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'user_type',
     ];
 
     /**
@@ -77,5 +78,45 @@ class User extends Authenticatable
     public function comments()
     {
         return $this->hasMany(Comment::class);
+    }
+
+    /**
+     * Get the artisans for the user.
+     */
+    public function artisans()
+    {
+        return $this->hasMany(Artisan::class);
+    }
+
+    /**
+     * Check if the user is a customer.
+     */
+    public function isCustomer()
+    {
+        return $this->user_type === 'customer';
+    }
+
+    /**
+     * Check if the user is an artisan.
+     */
+    public function isArtisan()
+    {
+        return $this->user_type === 'artisan';
+    }
+
+    /**
+     * Scope to only customers.
+     */
+    public function scopeCustomers($query)
+    {
+        return $query->where('user_type', 'customer');
+    }
+
+    /**
+     * Scope to only artisans.
+     */
+    public function scopeArtisans($query)
+    {
+        return $query->where('user_type', 'artisan');
     }
 }
