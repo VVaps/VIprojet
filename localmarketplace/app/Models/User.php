@@ -21,11 +21,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-<<<<<<< HEAD
         'user_type',
-=======
-        
->>>>>>> 4db345e8697054a6ed56fcfadea887a9e4ff6362
     ];
 
     /**
@@ -51,7 +47,6 @@ class User extends Authenticatable
         ];
     }
 
-<<<<<<< HEAD
     /**
      * Get the orders for the user.
      */
@@ -123,15 +118,5 @@ class User extends Authenticatable
     public function scopeArtisans($query)
     {
         return $query->where('user_type', 'artisan');
-=======
-    public function artisans()
-    {
-        return $this->hasMany(Artisan::class, 'id_user');
-    }
-
-    public function isArtisan()
-    {
-        return $this->artisans()->exists();
->>>>>>> 4db345e8697054a6ed56fcfadea887a9e4ff6362
     }
 }

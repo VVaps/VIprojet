@@ -4,11 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-<<<<<<< HEAD
-use App\Services\CartService;
-=======
 use App\Models\Artisan;
->>>>>>> 4db345e8697054a6ed56fcfadea887a9e4ff6362
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -19,13 +15,6 @@ use Illuminate\View\View;
 
 class RegisteredUserController extends Controller
 {
-    protected $cartService;
-
-    public function __construct(CartService $cartService)
-    {
-        $this->cartService = $cartService;
-    }
-
     /**
      * Display the registration view.
      */
@@ -45,48 +34,43 @@ class RegisteredUserController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'is_artisan' => 'boolean',
+            'user_type' => ['required', 'in:customer,artisan'],
         ]);
 
-        if ($request->has('is_artisan') && $request->is_artisan) {
-        // if (isset($data['is_artisan']) && $data['is_artisan']) {
+        // Additional validation for artisan users
+        if ($request->user_type === 'artisan') {
             $request->validate([
-                'name' => ['required', 'string', 'max:255'],
-                'email' => ['string', 'lowercase', 'email', 'max:50'],
-                'phone' => ['required', 'string', 'lowercase', 'max:20'], 
-                'rib' => ['required','string', 'max:20'], 
-                'description' => ['string', 'max:1000'], 
-                'address' => ['required', 'string', 'max:255'], 
+                'artisan_name' => ['required', 'string', 'max:255'],
+                'artisan_email' => ['required', 'string', 'lowercase', 'email', 'max:255'],
+                'phone' => ['required', 'string', 'max:20'],
+                'address' => ['required', 'string', 'max:255'],
+                'description' => ['nullable', 'string', 'max:1000'],
             ]);
         }
 
+        // Create user
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'user_type' => $request->user_type,
         ]);
 
         event(new Registered($user));
 
-        Auth::login($user);
-
-<<<<<<< HEAD
-        // Merge session cart with new user's database cart after successful registration
-        $this->cartService->mergeSessionCartWithDatabase();
-=======
-        // Si la case "Je suis artisan" est cochée, créer le premier compte artisan
-        if ($request->has('is_artisan') && $request->is_artisan) {
+        // If artisan, create artisan record
+        if ($request->user_type === 'artisan') {
             Artisan::create([
                 'name' => $request->artisan_name,
                 'email' => $request->artisan_email,
                 'phone' => $request->phone,
-                'address' =>$request->address,
-                'rib' => $request->rib,
+                'address' => $request->address,
                 'description' => $request->description,
-                'id_user' => $user->id,
+                'user_id' => $user->id,
             ]);
         }
->>>>>>> 4db345e8697054a6ed56fcfadea887a9e4ff6362
+
+        Auth::login($user);
 
         return redirect(route('dashboard', absolute: false));
     }
